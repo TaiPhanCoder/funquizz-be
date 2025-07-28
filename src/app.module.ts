@@ -1,39 +1,24 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './modules/user/user.module';
+import { TypeOrmConfigModule } from './config/typeorm.config';
+import { ThrottlerConfigModule } from './config/throttler.config';
+import { RedisModule } from './config/redis.module';
 import databaseConfig from './config/database.config';
 import appConfig from './config/app.config';
+import redisConfig from './config/redis.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, appConfig],
+      load: [databaseConfig, appConfig, redisConfig],
       envFilePath: '.env',
     }),
-    // TypeOrmModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   useFactory: (configService: ConfigService) => {
-    //     const dbConfig = configService.get('database');
-    //     return dbConfig || {};
-    //   },
-    //   inject: [ConfigService],
-    // }),
-    ThrottlerModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        throttlers: [
-          {
-            ttl: configService.get('app.throttle.ttl') || 60,
-            limit: configService.get('app.throttle.limit') || 10,
-          },
-        ],
-      }),
-      inject: [ConfigService],
-    }),
-    // UserModule, // Temporarily disabled until database is connected
+    RedisModule,
+    TypeOrmConfigModule,
+    ThrottlerConfigModule,
+    UserModule,
   ],
   controllers: [],
   providers: [],

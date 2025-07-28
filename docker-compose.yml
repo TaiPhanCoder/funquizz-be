@@ -16,6 +16,18 @@ services:
     networks:
       - funquizz-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: funquizz-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - funquizz-network
+
   app:
     build: .
     container_name: funquizz-app
@@ -29,13 +41,17 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - DB_DATABASE=funquizz
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       - postgres
+      - redis
     networks:
       - funquizz-network
 
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
   funquizz-network:

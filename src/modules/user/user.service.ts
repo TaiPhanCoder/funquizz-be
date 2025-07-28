@@ -1,48 +1,45 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserRepository } from './user.repository';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userRepository: UserRepository,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const existingUser = await this.userRepository.findOne({
-      where: { email: createUserDto.email },
-    });
+    const existingUserEmail = await this.userRepository.findByEmail(createUserDto.email);
+    const existingUsername = await this.userRepository.findByUsername(createUserDto.username);
 
-    if (existingUser) {
+    if (existingUserEmail) {
       throw new ConflictException('Email already exists');
+    }
+
+    if (existingUsername) {
+      throw new ConflictException('Username already exists');
     }
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
     
-    const user = this.userRepository.create({
+    const savedUser = await this.userRepository.create({
       ...createUserDto,
       password: hashedPassword,
     });
 
-    return this.userRepository.save(user);
+    // Return user without password
+    return this.findOne(savedUser.id);
   }
 
   async findAll(): Promise<User[]> {
-    return this.userRepository.find({
-      select: ['id', 'email', 'username', 'isActive', 'createdAt', 'updatedAt'],
-    });
+    return this.userRepository.findAll();
   }
 
   async findOne(id: string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { id },
-      select: ['id', 'email', 'username', 'isActive', 'createdAt', 'updatedAt'],
-    });
+    const user = await this.userRepository.findOne(id);
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -55,9 +52,7 @@ export class UserService {
     const user = await this.findOne(id);
 
     if (updateUserDto.email && updateUserDto.email !== user.email) {
-      const existingUser = await this.userRepository.findOne({
-        where: { email: updateUserDto.email },
-      });
+      const existingUser = await this.userRepository.findByEmail(updateUserDto.email);
 
       if (existingUser) {
         throw new ConflictException('Email already exists');
@@ -73,7 +68,10 @@ export class UserService {
   }
 
   async remove(id: string): Promise<void> {
-    const user = await this.findOne(id);
+    const user = await this.userRepository.findOneWithPassword(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
     await this.userRepository.remove(user);
   }
 }

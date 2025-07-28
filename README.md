@@ -4,17 +4,16 @@ A NestJS backend application for FunQuizz with PostgreSQL database, comprehensiv
 
 ## Features
 
-- **NestJS Framework** with TypeScript
-- **PostgreSQL** database with TypeORM
-- **Authentication & Authorization** ready structure
-- **Input Validation** with class-validator and Zod
-- **API Documentation** with Swagger
-- **Security** with Helmet and CORS
-- **Rate Limiting** with Throttler
-- **Global Exception Handling**
-- **Request/Response Logging**
-- **Response Transformation**
-- **Docker Support**
+- **NestJS Framework** - Modern Node.js framework
+- **PostgreSQL Database** - Robust relational database
+- **Redis Cache** - In-memory data structure store
+- **TypeORM** - Database ORM with migrations
+- **Repository Pattern** - Clean separation of data access logic
+- **Swagger Documentation** - Auto-generated API docs
+- **Docker Support** - Containerized development and deployment
+- **Security** - Helmet, CORS, rate limiting
+- **Logging & Monitoring** - Request/response logging
+- **Modular Configuration** - Organized config modules
 
 ## Prerequisites
 
@@ -105,6 +104,12 @@ src/
 │   ├── decorators/       # Custom decorators
 │   └── dtos/            # Common DTOs
 ├── config/              # Configuration files
+│   ├── app.config.ts    # Application configuration
+│   ├── database.config.ts # Database configuration
+│   ├── redis.config.ts  # Redis configuration
+│   ├── typeorm.config.ts # TypeORM module configuration
+│   ├── throttler.config.ts # Rate limiting configuration
+│   └── redis.module.ts  # Redis module
 ├── database/
 │   └── entities/        # TypeORM entities
 ├── modules/
@@ -112,6 +117,7 @@ src/
 │       ├── dto/        # User DTOs
 │       ├── user.controller.ts
 │       ├── user.service.ts
+│       ├── user.repository.ts # Data access layer
 │       └── user.module.ts
 ├── app.module.ts
 └── main.ts
@@ -120,22 +126,28 @@ src/
 ## Environment Variables
 
 ```env
-# Database
+# Database Configuration
 DB_HOST=localhost
 DB_PORT=5432
 DB_USERNAME=postgres
 DB_PASSWORD=postgres
 DB_DATABASE=funquizz
 
-# Application
+# Redis Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+REDIS_DB=0
+
+# Application Configuration
 PORT=3000
 NODE_ENV=development
 
-# JWT
+# JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key
 JWT_EXPIRES_IN=7d
 
-# Rate Limiting
+# Rate Limiting Configuration
 THROTTLE_TTL=60
 THROTTLE_LIMIT=10
 ```

@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import helmet from 'helmet';
 import * as compression from 'compression';
+import * as bodyParser from 'body-parser';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -17,6 +18,10 @@ async function bootstrap() {
   // Security middleware
   app.use(helmet());
   app.use(compression());
+
+  // Body parser configuration for JSON
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
   // Global prefix
   app.setGlobalPrefix(configService.get('app.globalPrefix') || 'api');
@@ -52,7 +57,12 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('users')
     .build();
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, config, {
+    operationIdFactory: (
+      controllerKey: string,
+      methodKey: string,
+    ) => methodKey,
+  });
   SwaggerModule.setup('api/docs', app, document);
 
   // CORS
