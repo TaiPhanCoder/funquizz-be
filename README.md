@@ -6,7 +6,7 @@ A NestJS backend application for FunQuizz with PostgreSQL database, comprehensiv
 
 - **NestJS Framework** - Modern Node.js framework
 - **PostgreSQL Database** - Robust relational database
-- **Redis Cache** - In-memory data structure store
+- **Redis Cache** - In-memory data structure store for OTP and caching
 - **TypeORM** - Database ORM with migrations
 - **Repository Pattern** - Clean separation of data access logic
 - **Swagger Documentation** - Auto-generated API docs
@@ -113,6 +113,8 @@ src/
 │   ├── filters/          # Global exception filters
 │   ├── interceptors/     # Global interceptors
 │   ├── decorators/       # Custom decorators
+│   ├── repositories/     # Common repositories (OTP)
+│   ├── services/         # Common services (Mailer)
 │   └── dtos/            # Common DTOs
 ├── config/              # Configuration files
 │   ├── app.config.ts    # Application configuration
@@ -130,8 +132,7 @@ src/
 │   │   ├── strategies/ # Passport strategies
 │   │   ├── auth.controller.ts
 │   │   ├── auth.service.ts
-│   │   ├── auth.module.ts
-│   │   └── otp.repository.ts
+│   │   └── auth.module.ts
 │   └── user/           # User module
 │       ├── dto/        # User DTOs
 │       ├── user.controller.ts

@@ -8,7 +8,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserRepository } from '../user/user.repository';
-import { OtpRepository } from './otp.repository';
+import { OtpRepository } from '../notify/repositories/otp.repository';
 import { MailerService } from '../../common/services/mailer.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -49,8 +49,6 @@ export class AuthService {
       email,
       username,
       password: hashedPassword,
-      isActive: true,
-      isEmailVerified: false,
     });
 
     // Generate and send OTP
@@ -117,10 +115,7 @@ export class AuthService {
       throw new BadRequestException('Invalid or expired OTP');
     }
 
-    // Check if OTP is expired
-    if (validOtp.expiresAt < new Date()) {
-      throw new BadRequestException('OTP has expired');
-    }
+    // OTP expiry is handled by Redis TTL, no need to check manually
 
     // Find user
     const user = await this.userRepository.findByEmail(email);
@@ -134,8 +129,8 @@ export class AuthService {
     // Update password
     await this.userRepository.update(user.id, { password: hashedPassword });
 
-    // Mark OTP as used
-    await this.otpRepository.markAsUsed(validOtp.id);
+    // Mark OTP as used (delete from Redis)
+    await this.otpRepository.markAsUsed(email, 'password_reset');
 
     return { message: 'Password reset successfully' };
   }
@@ -173,10 +168,7 @@ export class AuthService {
       throw new BadRequestException('Invalid or expired OTP');
     }
 
-    // Check if OTP is expired
-    if (validOtp.expiresAt < new Date()) {
-      throw new BadRequestException('OTP has expired');
-    }
+    // OTP expiry is handled by Redis TTL, no need to check manually
 
     // Find user
     const user = await this.userRepository.findByEmail(email);
@@ -184,11 +176,11 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    // Update user email verification status
-    await this.userRepository.update(user.id, { isEmailVerified: true });
+    // Mark user as active (verified)
+    await this.userRepository.update(user.id, { isActive: true });
 
-    // Mark OTP as used
-    await this.otpRepository.markAsUsed(validOtp.id);
+    // Mark OTP as used (delete from Redis)
+    await this.otpRepository.markAsUsed(email, 'email_verification');
 
     return { message: 'Email verified successfully' };
   }
@@ -197,10 +189,6 @@ export class AuthService {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
       throw new NotFoundException('User with this email does not exist');
-    }
-
-    if (user.isEmailVerified) {
-      throw new BadRequestException('Email is already verified');
     }
 
     await this.sendVerificationOtp(email);

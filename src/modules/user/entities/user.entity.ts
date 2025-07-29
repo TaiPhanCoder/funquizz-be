@@ -6,29 +6,22 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('otps')
-export class Otp {
+@Entity('users')
+export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: false })
+  @Column({ unique: true })
   email: string;
 
-  @Column()
-  code: string;
+  @Column({ unique: true })
+  username: string;
 
-  @Column({
-    type: 'enum',
-    enum: ['email_verification', 'password_reset'],
-    default: 'email_verification',
-  })
-  type: string;
+  @Column()
+  password: string;
 
   @Column({ default: false })
-  isUsed: boolean;
-
-  @Column({ type: 'timestamp' })
-  expiresAt: Date;
+  isActive: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

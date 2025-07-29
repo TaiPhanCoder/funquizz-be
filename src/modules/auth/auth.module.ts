@@ -3,18 +3,20 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserRepository } from '../user/user.repository';
-import { OtpRepository } from './otp.repository';
+import { OtpRepository } from '../notify/repositories/otp.repository';
 import { MailerService } from '../../common/services/mailer.service';
-import { User } from '../../database/entities/user.entity';
-import { Otp } from '../../database/entities/otp.entity';
+import { User } from '../user/entities/user.entity';
+import { NotifyModule } from '../notify/notify.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Otp]),
+    TypeOrmModule.forFeature([User]),
+    NotifyModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
