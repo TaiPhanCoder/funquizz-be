@@ -12,9 +12,10 @@ export class UserRepository {
     private readonly repository: Repository<User>,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(createUserDto: CreateUserDto | any): Promise<User> {
     const user = this.repository.create(createUserDto);
-    return this.repository.save(user);
+    const savedUser = await this.repository.save(user);
+    return savedUser;
   }
 
   async findAll(): Promise<User[]> {
@@ -30,8 +31,8 @@ export class UserRepository {
     });
   }
 
-  async findOneWithPassword(id: string): Promise<User | null> {
-    return this.repository.findOne({ where: { id } });
+  async findOneWithPassword(criteria: { id?: string; email?: string }): Promise<User | null> {
+    return this.repository.findOne({ where: criteria });
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -49,7 +50,7 @@ export class UserRepository {
     });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<void> {
+  async update(id: string, updateUserDto: UpdateUserDto | any): Promise<void> {
     await this.repository.update(id, updateUserDto);
   }
 

@@ -11,6 +11,8 @@ A NestJS backend application for FunQuizz with PostgreSQL database, comprehensiv
 - **Repository Pattern** - Clean separation of data access logic
 - **Swagger Documentation** - Auto-generated API docs
 - **Docker Support** - Containerized development and deployment
+- **Authentication** - JWT-based auth with OTP verification
+- **Email Service** - Nodemailer integration for OTP emails
 - **Security** - Helmet, CORS, rate limiting
 - **Logging & Monitoring** - Request/response logging
 - **Modular Configuration** - Organized config modules
@@ -87,6 +89,15 @@ A NestJS backend application for FunQuizz with PostgreSQL database, comprehensiv
 
 ## API Endpoints
 
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - User login
+- `POST /api/auth/forgot-password` - Request password reset
+- `POST /api/auth/reset-password` - Reset password with OTP
+- `POST /api/auth/change-password` - Change password (authenticated)
+- `POST /api/auth/verify-email` - Verify email with OTP
+- `POST /api/auth/resend-verification` - Resend verification OTP
+
 ### Users
 - `GET /api/users` - Get all users
 - `GET /api/users/:id` - Get user by ID
@@ -113,6 +124,14 @@ src/
 ├── database/
 │   └── entities/        # TypeORM entities
 ├── modules/
+│   ├── auth/           # Authentication module
+│   │   ├── dto/        # Auth DTOs
+│   │   ├── guards/     # Auth guards
+│   │   ├── strategies/ # Passport strategies
+│   │   ├── auth.controller.ts
+│   │   ├── auth.service.ts
+│   │   ├── auth.module.ts
+│   │   └── otp.repository.ts
 │   └── user/           # User module
 │       ├── dto/        # User DTOs
 │       ├── user.controller.ts
@@ -150,6 +169,14 @@ JWT_EXPIRES_IN=7d
 # Rate Limiting Configuration
 THROTTLE_TTL=60
 THROTTLE_LIMIT=10
+
+# Mailer Configuration
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USER=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_FROM=noreply@funquizz.com
+MAIL_FROM_NAME=FunQuizz
 ```
 
 ## Available Scripts
