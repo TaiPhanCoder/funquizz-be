@@ -31,8 +31,15 @@ export class UserRepository {
     });
   }
 
-  async findOneWithPassword(criteria: { id?: string; email?: string }): Promise<User | null> {
-    return this.repository.findOne({ where: criteria });
+  async findOneWithPassword(identifier: string): Promise<User | null> {
+    return this.repository.findOne({
+      where: [
+        { email: identifier },
+        { username: identifier },
+        { id: identifier }
+      ],
+      select: ['id', 'email', 'username', 'password', 'isActive', 'createdAt', 'updatedAt']
+    });
   }
 
   async findByEmail(email: string): Promise<User | null> {

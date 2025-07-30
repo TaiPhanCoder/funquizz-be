@@ -58,10 +58,10 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto): Promise<{ accessToken: string; user: Partial<User> }> {
-    const { email, password } = loginDto;
+    const { identifier, password } = loginDto;
 
     // Find user with password
-    const user = await this.userRepository.findOneWithPassword({ email });
+    const user = await this.userRepository.findOneWithPassword(identifier);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -139,7 +139,7 @@ export class AuthService {
     const { currentPassword, newPassword } = changePasswordDto;
 
     // Find user with password
-    const user = await this.userRepository.findOneWithPassword({ id: userId });
+    const user = await this.userRepository.findOneWithPassword(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
