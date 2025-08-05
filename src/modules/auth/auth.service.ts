@@ -47,22 +47,16 @@ export class AuthService {
     // Generate and send OTP
     await this.otpService.sendVerificationOtp(email);
 
-    // Find and return user with token
-    const createdUser = await this.userService.findOneWithPassword(email);
-    if (!createdUser) {
-      throw new NotFoundException('User not found');
-    }
-
     // Generate JWT tokens
-    const payload = { sub: createdUser.id };
+    const payload = { sub: user.id };
     const { accessToken, refreshToken } = this.tokenService.generateTokenPair(payload);
 
     // Store refresh token in Redis
     const refreshExpiresIn = this.tokenService.parseExpirationTime('7d');
-    await this.refreshTokenRepository.create(createdUser.id, refreshToken, refreshExpiresIn);
+    await this.refreshTokenRepository.create(user.id, refreshToken, refreshExpiresIn);
 
     return {
-      user: this.toUserResponse(createdUser),
+      user: this.toUserResponse(user),
       token: {
         accessToken,
         refreshToken,
