@@ -7,17 +7,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { UserRepository } from '../user/user.repository';
-import { OtpRepository } from '../notify/repositories/otp.repository';
-import { MailerService } from '../../common/services/mailer.service';
+import { TokenService } from './services/token.service';
+import { UserModule } from '../user/user.module';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository';
-import { User } from '../user/entities/user.entity';
 import { NotifyModule } from '../notify/notify.module';
 import { RedisModule } from '../../config/redis.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    UserModule,
     NotifyModule,
     RedisModule,
     PassportModule,
@@ -36,9 +34,7 @@ import { RedisModule } from '../../config/redis.module';
   providers: [
     AuthService,
     JwtStrategy,
-    UserRepository,
-    OtpRepository,
-    MailerService,
+    TokenService,
     RefreshTokenRepository,
   ],
   exports: [AuthService, JwtStrategy],
