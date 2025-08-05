@@ -7,7 +7,7 @@ export default registerAs('mailer', () => ({
     secure: false, // true for 465, false for other ports
     auth: {
       user: process.env.MAIL_USER,
-      pass: process.env.MAIL_PASSWORD, // App password for Gmail
+      pass: process.env.EMAIL_APP_PASS, // App password for Gmail
     },
   },
   defaults: {

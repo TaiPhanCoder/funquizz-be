@@ -56,6 +56,17 @@ async function bootstrap() {
     .setDescription('The FunQuizz API documentation')
     .setVersion('1.0')
     .addTag('users')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth', // This name here is important for referring to it in controller decorators
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config, {
     operationIdFactory: (

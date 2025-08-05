@@ -61,7 +61,7 @@ export class MailerService {
             <p>Hello,</p>
             <p>${message}</p>
             <div class="otp-code">${otp}</div>
-            <p>This code will expire in 10 minutes.</p>
+            <p>This code will expire in ${this.configService.get('mailer.otp.expiresIn')} minutes.</p>
             <p>If you didn't request this code, please ignore this email.</p>
           </div>
           <div class="footer">

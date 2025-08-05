@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -17,6 +18,7 @@ export class User {
   @Column({ unique: true })
   username: string;
 
+  @Exclude({ toPlainOnly: true })
   @Column()
   password: string;
 

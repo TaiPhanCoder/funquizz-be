@@ -10,20 +10,23 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserRepository } from '../user/user.repository';
 import { OtpRepository } from '../notify/repositories/otp.repository';
 import { MailerService } from '../../common/services/mailer.service';
+import { RefreshTokenRepository } from './repositories/refresh-token.repository';
 import { User } from '../user/entities/user.entity';
 import { NotifyModule } from '../notify/notify.module';
+import { RedisModule } from '../../config/redis.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     NotifyModule,
+    RedisModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'your-secret-key',
+        secret: configService.get<string>('app.jwt.secret'),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '24h',
+          expiresIn: configService.get<string>('app.jwt.expiresIn'),
         },
       }),
       inject: [ConfigService],
@@ -36,6 +39,7 @@ import { NotifyModule } from '../notify/notify.module';
     UserRepository,
     OtpRepository,
     MailerService,
+    RefreshTokenRepository,
   ],
   exports: [AuthService, JwtStrategy],
 })

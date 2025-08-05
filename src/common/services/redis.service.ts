@@ -49,4 +49,8 @@ export class RedisService {
   async expire(key: string, ttl: number): Promise<void> {
     await this.redis.expire(key, ttl);
   }
+
+  async keys(pattern: string): Promise<string[]> {
+    return this.redis.keys(pattern);
+  }
 }

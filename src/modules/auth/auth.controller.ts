@@ -9,13 +9,17 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { VerifyOtpDto } from './dto/verify-otp.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
-import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { RegisterDto } from './dto/request/register.dto';
+import { LoginDto } from './dto/request/login.dto';
+import { ForgotPasswordDto } from './dto/request/forgot-password.dto';
+import { VerifyOtpDto } from './dto/request/verify-otp.dto';
+import { ResetPasswordDto } from './dto/request/reset-password.dto';
+import { ChangePasswordDto } from './dto/request/change-password.dto';
+import { ResendVerificationDto } from './dto/request/resend-verification.dto';
+import { RefreshTokenDto } from './dto/request/refresh-token.dto';
+import { AuthResponseDto } from './dto/response/auth-response.dto';
+import { RefreshTokenResponseDto } from './dto/response/refresh-token-response.dto';
+import { MessageResponseDto } from './dto/response/message-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('Authentication')
@@ -29,15 +33,10 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'User registered successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'User registered successfully. Please check your email for verification code.' },
-      },
-    },
+    type: AuthResponseDto,
   })
   @ApiResponse({ status: 409, description: 'User already exists' })
-  async register(@Body() registerDto: RegisterDto) {
+  async register(@Body() registerDto: RegisterDto): Promise<AuthResponseDto> {
     return this.authService.register(registerDto);
   }
 
@@ -47,25 +46,10 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'User logged in successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        accessToken: { type: 'string' },
-        user: {
-          type: 'object',
-          properties: {
-            id: { type: 'string' },
-            email: { type: 'string' },
-            username: { type: 'string' },
-            isActive: { type: 'boolean' },
-            isEmailVerified: { type: 'boolean' },
-          },
-        },
-      },
-    },
+    type: AuthResponseDto,
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body() loginDto: LoginDto) {
+  async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
     return this.authService.login(loginDto);
   }
 
@@ -75,15 +59,10 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Password reset code sent',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'Password reset code sent to your email' },
-      },
-    },
+    type: MessageResponseDto,
   })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto): Promise<MessageResponseDto> {
     return this.authService.forgotPassword(forgotPasswordDto);
   }
 
@@ -93,15 +72,10 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Password reset successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'Password reset successfully' },
-      },
-    },
+    type: MessageResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Invalid or expired OTP' })
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<MessageResponseDto> {
     return this.authService.resetPassword(resetPasswordDto);
   }
 
@@ -113,16 +87,11 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Password changed successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'Password changed successfully' },
-      },
-    },
+    type: MessageResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Current password is incorrect' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
+  async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto): Promise<MessageResponseDto> {
     return this.authService.changePassword(req.user.sub, changePasswordDto);
   }
 
@@ -132,15 +101,10 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Email verified successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'Email verified successfully' },
-      },
-    },
+    type: MessageResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Invalid or expired OTP' })
-  async verifyEmail(@Body() verifyOtpDto: VerifyOtpDto) {
+  async verifyEmail(@Body() verifyOtpDto: VerifyOtpDto): Promise<MessageResponseDto> {
     return this.authService.verifyEmail(verifyOtpDto);
   }
 
@@ -150,16 +114,39 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Verification code sent',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'Verification code sent to your email' },
-      },
-    },
+    type: MessageResponseDto,
   })
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiResponse({ status: 400, description: 'Email is already verified' })
-  async resendVerificationOtp(@Body() resendVerificationDto: ResendVerificationDto) {
+  async resendVerificationOtp(@Body() resendVerificationDto: ResendVerificationDto): Promise<MessageResponseDto> {
     return this.authService.resendVerificationOtp(resendVerificationDto.email);
+  }
+
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiResponse({
+    status: 200,
+    description: 'Token refreshed successfully',
+    type: RefreshTokenResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Invalid refresh token' })
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto): Promise<RefreshTokenResponseDto> {
+    return this.authService.refreshToken(refreshTokenDto);
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Logged out successfully',
+    type: MessageResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async logout(@Request() req): Promise<MessageResponseDto> {
+    return this.authService.logout(req.user.sub);
   }
 }

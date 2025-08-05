@@ -20,7 +20,7 @@ export class UserRepository {
 
   async findAll(): Promise<User[]> {
     return this.repository.find({
-      select: ['id', 'email', 'username', 'isActive', 'createdAt', 'updatedAt'],
+      select: ['id', 'email', 'username', 'isActive', 'createdAt'],
     });
   }
 
@@ -35,10 +35,8 @@ export class UserRepository {
     return this.repository.findOne({
       where: [
         { email: identifier },
-        { username: identifier },
-        { id: identifier }
-      ],
-      select: ['id', 'email', 'username', 'password', 'isActive', 'createdAt', 'updatedAt']
+        { username: identifier }      ],
+      select: ['id', 'email', 'username', 'password', 'isActive', 'createdAt'],
     });
   }
 
