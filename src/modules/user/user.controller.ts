@@ -8,11 +8,15 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UserResponseDto } from '../auth/dto/response/user-response.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -32,6 +36,20 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
   findAll() {
     return this.userService.findAll();
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User profile retrieved successfully',
+    type: UserResponseDto 
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  getProfile(@Request() req): Promise<UserResponseDto> {
+    return this.userService.findOne(req.user.sub);
   }
 
   @Get(':id')
