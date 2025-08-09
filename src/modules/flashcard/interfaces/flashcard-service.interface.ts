@@ -11,4 +11,5 @@ export interface IFlashcardService {
   update(id: string, updateFlashcardDto: UpdateFlashcardDto, userId: string): Promise<Flashcard>;
   remove(id: string, userId: string): Promise<void>;
   reviewFlashcard(id: string, userId: string): Promise<Flashcard>;
+  findAccessibleById(id: string, userId?: string): Promise<Flashcard | null>;
 }

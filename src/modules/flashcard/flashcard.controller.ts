@@ -19,6 +19,8 @@ import { UpdateFlashcardDto } from './dto/update-flashcard.dto';
 import { FlashcardResponseDto } from './dto/response/flashcard-response.dto';
 import { MessageResponseDto } from './dto/response/message-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
+import { FlashcardAccessGuard } from './guards/flashcard-access.guard';
 import { FlashcardDifficulty } from './enums/flashcard-difficulty.enum';
 
 @ApiTags('flashcards')
@@ -41,7 +43,8 @@ export class FlashcardController {
     @Body() createFlashcardDto: CreateFlashcardDto,
     @Request() req,
   ): Promise<FlashcardResponseDto> {
-    return this.flashcardService.create(createFlashcardDto, req.user.sub);
+    const flashcard = await this.flashcardService.create(createFlashcardDto, req.user.sub);
+    return this.mapToResponseDto(flashcard);
   }
 
   @Get()
@@ -53,7 +56,8 @@ export class FlashcardController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findAll(@Request() req): Promise<FlashcardResponseDto[]> {
-    return this.flashcardService.findAll(req.user.sub);
+    const flashcards = await this.flashcardService.findAll(req.user.sub);
+    return flashcards.map(flashcard => this.mapToResponseDto(flashcard));
   }
 
   @Get('category/:category')
@@ -68,7 +72,8 @@ export class FlashcardController {
     @Param('category') category: string,
     @Request() req,
   ): Promise<FlashcardResponseDto[]> {
-    return this.flashcardService.findByCategory(category, req.user.sub);
+    const flashcards = await this.flashcardService.findByCategory(category, req.user.sub);
+    return flashcards.map(flashcard => this.mapToResponseDto(flashcard));
   }
 
   @Get('difficulty/:difficulty')
@@ -80,26 +85,28 @@ export class FlashcardController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findByDifficulty(
-    @Param('difficulty') difficulty: FlashcardDifficulty,
+    @Param('difficulty') difficulty: string,
     @Request() req,
   ): Promise<FlashcardResponseDto[]> {
-    return this.flashcardService.findByDifficulty(difficulty, req.user.sub);
+    const flashcards = await this.flashcardService.findByDifficulty(difficulty as FlashcardDifficulty, req.user.sub);
+    return flashcards.map(flashcard => this.mapToResponseDto(flashcard));
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get flashcard by ID' })
+  @UseGuards(OptionalJwtAuthGuard, FlashcardAccessGuard)
+  @ApiOperation({ summary: 'Get flashcard by ID (public or owned)' })
   @ApiResponse({
     status: 200,
     description: 'Flashcard retrieved successfully',
     type: FlashcardResponseDto,
   })
-  @ApiResponse({ status: 404, description: 'Flashcard not found' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Flashcard not found or access denied' })
   async findOne(
     @Param('id') id: string,
     @Request() req,
   ): Promise<FlashcardResponseDto> {
-    return this.flashcardService.findOne(id, req.user.sub);
+    // Flashcard is already validated and attached by FlashcardAccessGuard
+    return this.mapToResponseDto(req.flashcard);
   }
 
   @Patch(':id')
@@ -116,7 +123,8 @@ export class FlashcardController {
     @Body() updateFlashcardDto: UpdateFlashcardDto,
     @Request() req,
   ): Promise<FlashcardResponseDto> {
-    return this.flashcardService.update(id, updateFlashcardDto, req.user.sub);
+    const flashcard = await this.flashcardService.update(id, updateFlashcardDto, req.user.sub);
+    return this.mapToResponseDto(flashcard);
   }
 
   @Delete(':id')
@@ -151,6 +159,25 @@ export class FlashcardController {
     @Param('id') id: string,
     @Request() req,
   ): Promise<FlashcardResponseDto> {
-    return this.flashcardService.reviewFlashcard(id, req.user.sub);
+    const flashcard = await this.flashcardService.reviewFlashcard(id, req.user.sub);
+    return this.mapToResponseDto(flashcard);
+  }
+
+  private mapToResponseDto(flashcard: any): FlashcardResponseDto {
+    return {
+      id: flashcard.id,
+      question: flashcard.question,
+      answer: flashcard.answer,
+      category: flashcard.category,
+      difficulty: flashcard.difficulty,
+      reviewCount: flashcard.reviewCount,
+      lastReviewedAt: flashcard.lastReviewedAt,
+      isActive: flashcard.isActive,
+      isPublic: flashcard.isPublic,
+      imageUrl: flashcard.imageUrl,
+      userId: flashcard.userId,
+      createdAt: flashcard.createdAt,
+      updatedAt: flashcard.updatedAt,
+    };
   }
 }

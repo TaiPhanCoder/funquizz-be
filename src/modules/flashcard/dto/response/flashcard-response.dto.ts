@@ -55,6 +55,19 @@ export class FlashcardResponseDto {
   isActive: boolean;
 
   @ApiProperty({
+    description: 'Whether the flashcard is public (visible to everyone)',
+    example: false
+  })
+  isPublic: boolean;
+
+  @ApiProperty({
+    description: 'URL of the image attached to the flashcard',
+    example: 'https://example.com/image.jpg',
+    nullable: true
+  })
+  imageUrl?: string;
+
+  @ApiProperty({
     description: 'ID of the user who owns this flashcard',
     example: '123e4567-e89b-12d3-a456-426614174000'
   })

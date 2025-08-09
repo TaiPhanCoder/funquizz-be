@@ -68,13 +68,38 @@ export class FlashcardRepository implements IFlashcardRepository {
     }
   }
 
-  async incrementReviewCount(id: string, userId: string): Promise<void> {
-    await this.repository.update(
-      { id, userId },
-      {
+  async findAccessibleById(id: string, userId?: string): Promise<Flashcard | null> {
+    const whereConditions: any[] = [
+      { id, isActive: true, isPublic: true }, // Public flashcards
+    ];
+
+    // If user is authenticated, also include their private flashcards
+    if (userId) {
+      whereConditions.push({ id, userId, isActive: true });
+    }
+
+    return this.repository.findOne({
+      where: whereConditions,
+    });
+  }
+
+  async incrementReviewCount(id: string, userId: string): Promise<Flashcard> {
+    // Use returning for PostgreSQL to get updated record in one query
+    const result = await this.repository
+      .createQueryBuilder()
+      .update(Flashcard)
+      .set({
         reviewCount: () => 'reviewCount + 1',
         lastReviewedAt: new Date(),
-      }
-    );
+      })
+      .where('id = :id AND userId = :userId', { id, userId })
+      .returning('*')
+      .execute();
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Flashcard with ID ${id} not found`);
+    }
+
+    return result.raw[0];
   }
 }

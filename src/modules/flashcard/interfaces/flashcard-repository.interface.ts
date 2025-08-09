@@ -10,5 +10,6 @@ export interface IFlashcardRepository {
   findByDifficulty(difficulty: string, userId: string): Promise<Flashcard[]>;
   update(id: string, updateFlashcardDto: UpdateFlashcardDto, userId: string): Promise<Flashcard>;
   remove(id: string, userId: string): Promise<void>;
-  incrementReviewCount(id: string, userId: string): Promise<void>;
+  findAccessibleById(id: string, userId?: string): Promise<Flashcard | null>;
+  incrementReviewCount(id: string, userId: string): Promise<Flashcard>;
 }

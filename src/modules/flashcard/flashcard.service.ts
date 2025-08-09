@@ -48,7 +48,10 @@ export class FlashcardService implements IFlashcardService {
 
   async reviewFlashcard(id: string, userId: string): Promise<Flashcard> {
     const flashcard = await this.findOne(id, userId);
-    await this.flashcardRepository.incrementReviewCount(id, userId);
-    return this.findOne(id, userId); // Return updated flashcard
+    return this.flashcardRepository.incrementReviewCount(id, userId);
+  }
+
+  async findAccessibleById(id: string, userId?: string): Promise<Flashcard | null> {
+    return this.flashcardRepository.findAccessibleById(id, userId);
   }
 }

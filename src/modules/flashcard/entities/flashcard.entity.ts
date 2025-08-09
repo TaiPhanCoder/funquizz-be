@@ -36,6 +36,12 @@ export class Flashcard {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ default: false })
+  isPublic: boolean;
+
+  @Column({ nullable: true })
+  imageUrl?: string;
+
   @Column('uuid')
   userId: string;
 
