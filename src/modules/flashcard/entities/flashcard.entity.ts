@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
+import { FlashcardSet } from '../../flashcard-set/entities/flashcard-set.entity';
 import { FlashcardDifficulty } from '../enums/flashcard-difficulty.enum';
 
 @Entity('flashcards')
@@ -22,9 +23,6 @@ export class Flashcard {
   answer: string;
 
   @Column({ nullable: true })
-  category: string;
-
-  @Column({ nullable: true })
   difficulty: FlashcardDifficulty;
 
   @Column({ default: 0 })
@@ -36,18 +34,22 @@ export class Flashcard {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ default: false })
-  isPublic: boolean;
-
   @Column({ nullable: true })
   imageUrl?: string;
 
   @Column('uuid')
   userId: string;
 
+  @Column('uuid')
+  flashcardSetId: string;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })
   user: User;
+
+  @ManyToOne(() => FlashcardSet, (flashcardSet) => flashcardSet.flashcards)
+  @JoinColumn({ name: 'flashcardSetId' })
+  flashcardSet: FlashcardSet;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -4,6 +4,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { FlashcardModule } from './modules/flashcard/flashcard.module';
+import { FlashcardSetModule } from './modules/flashcard-set/flashcard-set.module';
 import { TypeOrmConfigModule } from './config/typeorm.config';
 import { ThrottlerConfigModule } from './config/throttler.config';
 import { RedisModule } from './config/redis.module';
@@ -38,6 +39,7 @@ import * as redisStore from 'cache-manager-redis-store';
     UserModule,
     AuthModule,
     FlashcardModule,
+    FlashcardSetModule,
   ],
   controllers: [],
   providers: [],

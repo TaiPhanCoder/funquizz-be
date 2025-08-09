@@ -14,10 +14,11 @@ export class FlashcardRepository implements IFlashcardRepository {
     private readonly repository: Repository<Flashcard>,
   ) {}
 
-  async create(createFlashcardDto: CreateFlashcardDto, userId: string): Promise<Flashcard> {
+  async create(createFlashcardDto: CreateFlashcardDto, userId: string, flashcardSetId: string): Promise<Flashcard> {
     const flashcard = this.repository.create({
       ...createFlashcardDto,
       userId,
+      flashcardSetId,
     });
     return await this.repository.save(flashcard);
   }
@@ -32,13 +33,6 @@ export class FlashcardRepository implements IFlashcardRepository {
   async findOne(id: string, userId: string): Promise<Flashcard | null> {
     return this.repository.findOne({
       where: { id, userId, isActive: true },
-    });
-  }
-
-  async findByCategory(category: string, userId: string): Promise<Flashcard[]> {
-    return this.repository.find({
-      where: { category, userId, isActive: true },
-      order: { createdAt: 'DESC' },
     });
   }
 

@@ -24,15 +24,15 @@ import { FlashcardAccessGuard } from './guards/flashcard-access.guard';
 import { FlashcardDifficulty } from './enums/flashcard-difficulty.enum';
 
 @ApiTags('flashcards')
-@Controller('flashcards')
+@Controller()
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class FlashcardController {
   constructor(private readonly flashcardService: FlashcardService) {}
 
-  @Post()
+  @Post('sets/:setId/flashcards')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new flashcard' })
+  @ApiOperation({ summary: 'Create a new flashcard in a set' })
   @ApiResponse({
     status: 201,
     description: 'Flashcard created successfully',
@@ -40,14 +40,15 @@ export class FlashcardController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async create(
+    @Param('setId') setId: string,
     @Body() createFlashcardDto: CreateFlashcardDto,
     @Request() req,
   ): Promise<FlashcardResponseDto> {
-    const flashcard = await this.flashcardService.create(createFlashcardDto, req.user.sub);
+    const flashcard = await this.flashcardService.create(createFlashcardDto, req.user.sub, setId);
     return this.mapToResponseDto(flashcard);
   }
 
-  @Get()
+  @Get('flashcards')
   @ApiOperation({ summary: 'Get all flashcards for the current user' })
   @ApiResponse({
     status: 200,
@@ -60,23 +61,7 @@ export class FlashcardController {
     return flashcards.map(flashcard => this.mapToResponseDto(flashcard));
   }
 
-  @Get('category/:category')
-  @ApiOperation({ summary: 'Get flashcards by category' })
-  @ApiResponse({
-    status: 200,
-    description: 'Flashcards retrieved successfully',
-    type: [FlashcardResponseDto],
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async findByCategory(
-    @Param('category') category: string,
-    @Request() req,
-  ): Promise<FlashcardResponseDto[]> {
-    const flashcards = await this.flashcardService.findByCategory(category, req.user.sub);
-    return flashcards.map(flashcard => this.mapToResponseDto(flashcard));
-  }
-
-  @Get('difficulty/:difficulty')
+  @Get('flashcards/difficulty/:difficulty')
   @ApiOperation({ summary: 'Get flashcards by difficulty' })
   @ApiResponse({
     status: 200,
@@ -92,7 +77,7 @@ export class FlashcardController {
     return flashcards.map(flashcard => this.mapToResponseDto(flashcard));
   }
 
-  @Get(':id')
+  @Get('flashcards/:id')
   @UseGuards(OptionalJwtAuthGuard, FlashcardAccessGuard)
   @ApiOperation({ summary: 'Get flashcard by ID (public or owned)' })
   @ApiResponse({
@@ -109,7 +94,7 @@ export class FlashcardController {
     return this.mapToResponseDto(req.flashcard);
   }
 
-  @Patch(':id')
+  @Patch('flashcards/:id')
   @ApiOperation({ summary: 'Update flashcard' })
   @ApiResponse({
     status: 200,
@@ -127,7 +112,7 @@ export class FlashcardController {
     return this.mapToResponseDto(flashcard);
   }
 
-  @Delete(':id')
+  @Delete('flashcards/:id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete flashcard' })
   @ApiResponse({
@@ -145,7 +130,7 @@ export class FlashcardController {
     return { message: 'Flashcard deleted successfully' };
   }
 
-  @Post(':id/review')
+  @Post('flashcards/:id/review')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Mark flashcard as reviewed' })
   @ApiResponse({
@@ -168,14 +153,13 @@ export class FlashcardController {
       id: flashcard.id,
       question: flashcard.question,
       answer: flashcard.answer,
-      category: flashcard.category,
       difficulty: flashcard.difficulty,
       reviewCount: flashcard.reviewCount,
       lastReviewedAt: flashcard.lastReviewedAt,
       isActive: flashcard.isActive,
-      isPublic: flashcard.isPublic,
       imageUrl: flashcard.imageUrl,
       userId: flashcard.userId,
+      flashcardSetId: flashcard.flashcardSetId,
       createdAt: flashcard.createdAt,
       updatedAt: flashcard.updatedAt,
     };

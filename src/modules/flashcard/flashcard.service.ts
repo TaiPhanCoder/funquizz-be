@@ -12,8 +12,8 @@ export class FlashcardService implements IFlashcardService {
     private readonly flashcardRepository: FlashcardRepository,
   ) {}
 
-  async create(createFlashcardDto: CreateFlashcardDto, userId: string): Promise<Flashcard> {
-    return this.flashcardRepository.create(createFlashcardDto, userId);
+  async create(createFlashcardDto: CreateFlashcardDto, userId: string, flashcardSetId: string): Promise<Flashcard> {
+    return this.flashcardRepository.create(createFlashcardDto, userId, flashcardSetId);
   }
 
   async findAll(userId: string): Promise<Flashcard[]> {
@@ -28,9 +28,7 @@ export class FlashcardService implements IFlashcardService {
     return flashcard;
   }
 
-  async findByCategory(category: string, userId: string): Promise<Flashcard[]> {
-    return this.flashcardRepository.findByCategory(category, userId);
-  }
+
 
   async findByDifficulty(difficulty: FlashcardDifficulty, userId: string): Promise<Flashcard[]> {
     return this.flashcardRepository.findByDifficulty(difficulty, userId);
