@@ -13,6 +13,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ForbiddenException } from '@nestjs/common';
 import { FlashcardService } from './flashcard.service';
 import { CreateFlashcardDto } from './dto/create-flashcard.dto';
 import { UpdateFlashcardDto } from './dto/update-flashcard.dto';
@@ -20,15 +21,22 @@ import { FlashcardResponseDto } from './dto/response/flashcard-response.dto';
 import { MessageResponseDto } from './dto/response/message-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
-import { FlashcardAccessGuard } from './guards/flashcard-access.guard';
+// import { FlashcardAccessGuard } from './guards/flashcard-access.guard';
 import { FlashcardDifficulty } from './enums/flashcard-difficulty.enum';
+import { FlashcardSetService } from '../flashcard-set/flashcard-set.service';
+import { FlashcardAccessType } from '../flashcard-set/enums/flashcard-access-type.enum';
+import { AccessControlService } from '../flashcard-set/services/access-control.service';
 
 @ApiTags('flashcards')
 @Controller()
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class FlashcardController {
-  constructor(private readonly flashcardService: FlashcardService) {}
+  constructor(
+    private readonly flashcardService: FlashcardService,
+    private readonly flashcardSetService: FlashcardSetService,
+    private readonly accessService: AccessControlService,
+  ) {}
 
   @Post('sets/:setId/flashcards')
   @HttpCode(HttpStatus.CREATED)
@@ -78,20 +86,35 @@ export class FlashcardController {
   }
 
   @Get('flashcards/:id')
-  @UseGuards(OptionalJwtAuthGuard, FlashcardAccessGuard)
-  @ApiOperation({ summary: 'Get flashcard by ID (public or owned)' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get flashcard by ID (checks set access rules)' })
   @ApiResponse({
     status: 200,
     description: 'Flashcard retrieved successfully',
     type: FlashcardResponseDto,
   })
-  @ApiResponse({ status: 404, description: 'Flashcard not found or access denied' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden (locked set or not owner)' })
+  @ApiResponse({ status: 404, description: 'Flashcard not found' })
   async findOne(
     @Param('id') id: string,
     @Request() req,
   ): Promise<FlashcardResponseDto> {
-    // Flashcard is already validated and attached by FlashcardAccessGuard
-    return this.mapToResponseDto(req.flashcard);
+    const flashcard = await this.flashcardService.findAccessibleById(id, req.user?.sub);
+    if (!flashcard) {
+      throw new ForbiddenException('Access denied');
+    }
+    // Fetch set to check access type and ownership
+    const set = await this.flashcardSetService.findAccessibleById(flashcard.flashcardSetId, req.user.sub);
+    if (set.accessType === FlashcardAccessType.PRIVATE && set.userId !== req.user.sub) {
+      throw new ForbiddenException('You do not have access to this flashcard');
+    }
+    if (set.accessType === FlashcardAccessType.SETPASS && set.userId !== req.user.sub) {
+      const unlocked = await this.accessService.isSetUnlockedForUser(set.id, req.user.sub);
+      if (!unlocked) throw new ForbiddenException('Set is locked. Please unlock first.');
+    }
+    return this.mapToResponseDto(flashcard);
   }
 
   @Patch('flashcards/:id')

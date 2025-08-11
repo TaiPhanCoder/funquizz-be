@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { Flashcard } from '../../flashcard/entities/flashcard.entity';
+import { FlashcardAccessType } from '../enums/flashcard-access-type.enum';
 
 @Entity('flashcard_sets')
 export class FlashcardSet {
@@ -22,8 +23,11 @@ export class FlashcardSet {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ default: false })
-  isPublic: boolean;
+  @Column({ type: 'enum', enum: FlashcardAccessType, default: FlashcardAccessType.PRIVATE })
+  accessType: FlashcardAccessType;
+
+  @Column({ nullable: true })
+  accessPassword?: string; // hash
 
   @Column('uuid')
   userId: string;

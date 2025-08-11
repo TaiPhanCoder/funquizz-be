@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { FlashcardSet } from './entities/flashcard-set.entity';
 import { CreateFlashcardSetDto } from './dto/request/create-flashcard-set.dto';
 import { UpdateFlashcardSetDto } from './dto/request/update-flashcard-set.dto';
+import { FlashcardAccessType } from './enums/flashcard-access-type.enum';
+import { SelectQueryBuilder } from 'typeorm';
 
 @Injectable()
 export class FlashcardSetRepository {
@@ -22,17 +24,20 @@ export class FlashcardSetRepository {
   }
 
   async findByIdForAccess(id: string, userId?: string): Promise<FlashcardSet | null> {
-    // set is accessible if public, or owned by user
     const qb = this.repository.createQueryBuilder('set')
       .where('set.id = :id', { id });
 
     if (userId) {
-      qb.andWhere('(set.isPublic = TRUE OR set.userId = :userId)', { userId });
+      qb.andWhere('(set.accessType = :public OR set.userId = :userId OR set.accessType = :setpass)', { public: FlashcardAccessType.PUBLIC, setpass: FlashcardAccessType.SETPASS, userId });
     } else {
-      qb.andWhere('set.isPublic = TRUE');
+      qb.andWhere('set.accessType = :public', { public: FlashcardAccessType.PUBLIC });
     }
 
     return qb.getOne();
+  }
+
+  async findById(id: string): Promise<FlashcardSet | null> {
+    return this.repository.findOne({ where: { id } });
   }
 
   async update(id: string, dto: UpdateFlashcardSetDto, userId: string): Promise<FlashcardSet> {

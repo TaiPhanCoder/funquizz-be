@@ -10,8 +10,8 @@ export class FlashcardSetResponseDto {
   @ApiProperty({ description: 'Description of the set', nullable: true })
   description?: string;
 
-  @ApiProperty({ description: 'Public status of the set' })
-  isPublic: boolean;
+  @ApiProperty({ description: 'Access type of the set', enum: ['public','private','setpass'] })
+  accessType: string;
 
   @ApiProperty({ description: 'Owner user id' })
   userId: string;

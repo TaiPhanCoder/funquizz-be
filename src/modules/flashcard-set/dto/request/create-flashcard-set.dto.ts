@@ -1,5 +1,6 @@
-import { IsNotEmpty, IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { FlashcardAccessType } from '../../enums/flashcard-access-type.enum';
 
 export class CreateFlashcardSetDto {
   @ApiProperty({
@@ -20,11 +21,20 @@ export class CreateFlashcardSetDto {
   description?: string;
 
   @ApiProperty({
-    description: 'Whether the flashcard set is public (visible to everyone)',
-    example: false,
+    description: 'Access type of the set',
+    enum: FlashcardAccessType,
+    example: FlashcardAccessType.PRIVATE,
     required: false,
   })
-  @IsBoolean()
+  @IsEnum(FlashcardAccessType)
   @IsOptional()
-  isPublic?: boolean;
+  accessType?: FlashcardAccessType;
+
+  @ApiProperty({
+    description: 'Access password (plain text) if accessType is SETPASS; will be hashed',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  accessPassword?: string;
 }

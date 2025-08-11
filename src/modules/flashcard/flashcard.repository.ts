@@ -63,18 +63,8 @@ export class FlashcardRepository implements IFlashcardRepository {
   }
 
   async findAccessibleById(id: string, userId?: string): Promise<Flashcard | null> {
-    const whereConditions: any[] = [
-      { id, isActive: true, isPublic: true }, // Public flashcards
-    ];
-
-    // If user is authenticated, also include their private flashcards
-    if (userId) {
-      whereConditions.push({ id, userId, isActive: true });
-    }
-
-    return this.repository.findOne({
-      where: whereConditions,
-    });
+    // Deprecated: old public/private logic is being replaced by set-level access control
+    return this.repository.findOne({ where: { id, isActive: true } });
   }
 
   async incrementReviewCount(id: string, userId: string): Promise<Flashcard> {
